@@ -29,32 +29,31 @@ OWASはブロックにトランザクションを組み合わせる良いアイ�
 
     C = r*G + v*H
 
-ここで、CはPedersenの誓約、GとHはバックドアのない楕円曲線の組み合わせ生成、vは取引量、rは秘密のランダムなブラインド鍵です。
+ここで、`C`はPedersenの誓約、`G`と`H`はバックドアのない楕円曲線の組み合わせ生成、`v`は取引量、`r`は秘密のランダムなブラインド鍵です。
 
-このアウトプットについて、vは[0,2^64]の範囲をとるものと定義され、これによって、ユーザはオーバーフローアタック等の攻撃ができないことになります。
+このアウトプットについて、`v`は`[0,2^64]`の範囲をとるものと定義され、これによって、ユーザはオーバーフローアタック等の攻撃ができないことになります。
 
-トランザクションを検証するには、検証者は全てのアウトプットへの誓約、さらにf*H(fは自明で与えられるトランザクションフィー)と全ての入力誓約の減算を加えます。この結果は0のはずであり、これが無取引量もしくは全ての破棄、を証明するのです。
+トランザクションを検証するには、検証者は全てのアウトプットへの誓約、さらに`f*H`(`f`は自明で与えられるトランザクションフィー)と全ての入力誓約の減算を加えます。この結果は0のはずであり、これが無取引量もしくは全ての破棄、を証明するのです。
 
-ここで着目するのは、このようなトランザクションを発行するには、ユーザーは全ての誓約エントリについてのrの値の合計を知っておく必要があります。したがって、rの値(とその合計)が秘密鍵として働くのです。もし、rのアウトプットの値を受け取り手のみに公開すれば、我々は認証システムを持つことになるのです！残念ながら、もし我々が全ての誓約の合計が0というルールを守るのであれば、これは不可能なのですが、送信者は彼の全てのrの値の合計値を知っているおり、したがって受信者のrの値の合計は負の値となることを知っているからです。その代りに、我々は0でない値であるk\*Gを合計することをトランザクションに許可し、空の文字列の署名を鍵として必要とし、その取引量部分が0であることを証明するのです。
+ここで着目するのは、このようなトランザクションを発行するには、ユーザーは全ての誓約エントリについての`r`の値の合計を知っておく必要があります。したがって、`r`の値(とその合計)が秘密鍵として働くのです。もし、`r`のアウトプットの値を受け取り手のみに公開すれば、我々は認証システムを持つことになるのです！残念ながら、もし我々が全ての誓約の合計が0というルールを守るのであれば、これは不可能なのですが、送信者は彼の全てのrの値の合計値を知っているおり、したがって受信者のrの値の合計は負の値となることを知っているからです。その代りに、我々は0でない値である`k*G`を合計することをトランザクションに許可し、空の文字列の署名を鍵として必要とし、その取引量部分が0であることを証明するのです。
 
-We let transactions have as many k*G values as they want, each with a signature,
-and sum them during verification.
+我々はトランザクションに必要なだけの`k*G`の値を署名と、検証時にそれらの合計を持たせます。
 
-To create transactions sender and recipient do following ritual:
+トランザクションを作成するために、送信者と受信者は下記の儀式を行います。
 
-  1. Sender and recipient agree on amount to be sent. Call this b.
+1. 受信者と送信者は取引量についての合意を行います。これを`b`とします
 
-  2. Sender creates transaction with all inputs and change output(s), and gives
-     recipient the total blinding factor (r-value of change minus r-values of
-     inputs) along with this transaction. So the commitments sum to r*G - b*H.
+2. Sender creates transaction with all inputs and change output(s), and gives
+   recipient the total blinding factor (r-value of change minus r-values of
+   inputs) along with this transaction. So the commitments sum to r*G - b*H.
 
-  3. Recipient chooses random r-values for his outputs, and values that sum
-     to b minus fee, and adds these to transaction (including range proof).
-     Now the commitments sum to k*G - fee*H for some k that only recipient
-     knows.
+3. Recipient chooses random r-values for his outputs, and values that sum
+   to b minus fee, and adds these to transaction (including range proof).
+   Now the commitments sum to k*G - fee*H for some k that only recipient
+   knows.
 
-  4. Recipient attaches signature with k to the transaction, and the explicit
-     fee. It has done.
+4. Recipient attaches signature with k to the transaction, and the explicit
+   fee. It has done.
 
 Now, creating transactions in this manner supports OWAS already. To show this,
 suppose we have two transactions that have a surplus k1*G and k2*G, and the
@@ -85,15 +84,9 @@ in a transaction that could easily change. Therefore, it should be banned to hav
 two unspent outputs are equal at the same time, to avoid confusion.
 
 
+# 複数ブロックに渡るトランザクションのマージ
+さて、我々はMaxwell博士の秘匿トランザクションを用いて、インタラクション不要なバージョンの、Maxwell博士のCoinJoinを利用してきましたが、Maxwell博士の最後の奇跡をまだ見ていません。我々はまだ彼が[8]で説明したもう一つのアイディアであるトランザクションカットスルーが必要です。もう一度強調しますが、我々はインタラクションを必要としないバージョンを作り出し、それがいくつかのブロックでどのように使われるか、を示します。
 
-\****/
-Merging Transactions Across Blocks
-/****\
-
-Now, we have used Dr. Maxwell's Confidential Transactions to create a noninteractive
-version of Dr. Maxwell's CoinJoin, but we have not seen the last of marvelous Dr. Maxwell!
-We need another idea, transaction cut-through, he described in [8]. Again, we create a
-noninteractive version of this, and to show how it is used with several blocks.
 
 We can imagine now each block as one large transaction. To validate it, we add all the
 output commitments together, then subtracts all input commitments, k*G values, and all
@@ -132,39 +125,30 @@ The block headers and explicit amounts are negligible. Add this together and get
 30Gb -- with a confidential transaction and obscured transaction graph!
 
 
-\****/
-Questions and Intuition
-/****\
+# 質問と洞察
+下記が直近数週間の間の質問と、夢で私に語りかけ汗まみれで起きたものです。
+実際には問題はないですが。
 
-Here are some questions that since these weeks, dreams asked me and I woke up sweating.
-But in fact it is OK.
+Q. If you delete the transaction outputs, user cannot verify the rangeproof and maybe
+   a negative amount is created.
 
-  Q. If you delete the transaction outputs, user cannot verify the rangeproof and maybe
-     a negative amount is created.
-
-  A. This is OK. For the entire transaction to validate all negative amounts must have
-     been destroyed. User have SPV security only that no illegal inflation happened in
-     the past, but the user knows that _at this time_ no inflation occurred.
+A. This is OK. For the entire transaction to validate all negative amounts must have
+   been destroyed. User have SPV security only that no illegal inflation happened in
+   the past, but the user knows that _at this time_ no inflation occurred.
 
 
-  Q. If you delete the inputs, double spending can happen.
+Q. If you delete the inputs, double spending can happen.
 
-  A. In fact, this means: maybe someone claims that some unspent output was spent
-     in the old days. But this is impossible, otherwise the sum of the combined transaction
-     could not be zero.
+A. In fact, this means: maybe someone claims that some unspent output was spent in the old days. But this is impossible, otherwise the sum of the combined transaction could not be zero.
 
-     An exception is that if the outputs are amount zero, it is possible to make two that
-     are negatives of each other, and the pair can be revived without anything breaks. So to
-     prevent consensus problems, outputs 0-amount should be banned. Just add H at each output,
-     now they all amount to at least 1.
+An exception is that if the outputs are amount zero, it is possible to make two that
+are negatives of each other, and the pair can be revived without anything breaks. So to
+prevent consensus problems, outputs 0-amount should be banned. Just add H at each output,
+now they all amount to at least 1.
 
 
-
-\****/
-Future Research
-/****\
-
-Here are some questions I can not answer at the time of this writing.
+# 今後の調査
+下記が現状私がこれを執筆段階で答えられない質問です。
 
 1. What script support is possible? We would need to translate script operations into
    some sort of discrete logarithm information.
@@ -179,7 +163,6 @@ Here are some questions I can not answer at the time of this writing.
 
    For now maybe the user should just download the blockchain from a Torrent or something
    where the data is shared between many users and is reasonably likely to be correct.
-
 
 
 [1] https://people.xiph.org/~greg/confidential_values.txt<br>
