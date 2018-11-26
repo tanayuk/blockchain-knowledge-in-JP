@@ -43,24 +43,13 @@ OWASはブロックにトランザクションを組み合わせる良いアイ�
 
 1. 受信者と送信者は取引量についての合意を行います。これを`b`とします
 
-2. Sender creates transaction with all inputs and change output(s), and gives
-   recipient the total blinding factor (r-value of change minus r-values of
-   inputs) along with this transaction. So the commitments sum to r*G - b*H.
+2. 送信者は全てのインプットと変更されたアウトプットを元にトランザクションを作成し、受信者に対してブラインドファクターの合計（`r`の変更差分値から引くことのインプットの`r`の値）とこのトランザクション自体を知らせます。したがって誓約は`r*G - b*H`として加算演算されます。
 
-3. Recipient chooses random r-values for his outputs, and values that sum
-   to b minus fee, and adds these to transaction (including range proof).
-   Now the commitments sum to k*G - fee*H for some k that only recipient
-   knows.
+3. 受信者はかれのアウトプットについてランダムな`r`のの値を選択し、`b`から手数料を減算した合計の値、そして、それらをトランザクションに足し合わせ(これはレンジプルーフを含みます)ます。これにより、誓約は`k*G - fee*H`の合計として求められ、いくつかの`k`については受信者のみが知っていることになります。
 
-4. Recipient attaches signature with k to the transaction, and the explicit
-   fee. It has done.
+4. 受信者は`k`と一緒に署名をトランザクションと明らかである手数料を付与します。これで完了です。
 
-Now, creating transactions in this manner supports OWAS already. To show this,
-suppose we have two transactions that have a surplus k1*G and k2*G, and the
-attached signatures with these. Then you can combine the lists of inputs and
-outputs of the two transactions, with both k1*G and k2*G to the mix, and
-voilÃ¡! is again a valid transaction. From the combination, it is impossible to
-say which outputs or inputs are from which original transaction.
+さて、この作法によるトランザクションの作成はOWASをすでにサポートしています。これを証明するために、余剰である`k1*G`と`k2*G`、そして各々署名が付与されている2つのトランザクションがあるとします。そして、`k1*G`と`k2*G`の混合を用いて、2つのトランザクションのインプット群とアウトプット群を結合すると、”ボイラ！（おそらく呪文）”、これまた妥当なトランザクションとなるのです。この組み合わせから、元々のトランザクションからどのアウトプットとインプットなのかを特定することは不可能です。
 
 Because of this, we change our block format from Bitcoin to this information:
 
